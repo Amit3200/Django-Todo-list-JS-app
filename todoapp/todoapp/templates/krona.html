@@ -1,0 +1,228 @@
+<style>
+.container{
+  margin: 20px;
+}
+
+input[type="text"]:focus{   
+  border-color: #89CF99;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(126, 239, 104, 0.6);
+  outline: 0 none;
+}
+
+#clickableAwesomeFont {
+     cursor: pointer
+}
+
+#clickableAwesomeFont i{
+     font-size: 1.2em;
+}
+
+.fa, .fas, .far{
+  margin-left: 10px;
+}
+
+.fa.fa-times-circle{
+  color: #FF5C5C;
+}
+
+.yellowStar{
+  color:#F5A623;
+}
+body{
+  background-image: linear-gradient(to right top, #051937, #004d7a, #008793, #00bf72, #a8eb12);
+}
+.card{
+  background: rgba(0,0,0,0.1);
+}
+</style>
+
+<!-- bootstrap -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<!-- font awesome -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous">
+
+<body class="bg-secondary">
+  <div class="container" style="margin-top:100px;">
+    <div class="card" id="task-form" style="background:rgba(255,255,255,0.6);border:2px solid black;">
+      <div class="card-header">
+        <h5>Add Tasks</h5>
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="add new task..." aria-describedby="basic-addon2" id="task_input">
+          <div class="input-group-append">
+            <button class="btn btn-outline-success" type="button" id="createButton">Create</button>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h5 class="card-title">Tasks</h5>
+        <input type="text" class="form-control mb-3" placeholder="filter tasks..." aria-describedby="basic-addon2" id="filter">
+        <ul class="list-group"></ul> 
+        <button class="btn btn-outline-success mt-3" type="button" id="clearButton">Clear Tasks</button>
+      </div>
+    </div>
+  </div>
+  <div style="font-family:'Gidole';font-size: 16px; font-color:white;text-align: center;">Designed by Amit Singh &copy; 2018</div>
+<script>
+  // UI vars
+const form = document.querySelector('#task-form');
+const createBtn = document.querySelector('#createButton');
+const taskList = document.querySelector('.list-group');
+const clearBtn = document.querySelector('#clearButton');
+const filter = document.querySelector('#filter');
+const taskInput = document.querySelector('#task_input');
+
+// Load all event listeners
+loadEventListeners();
+function loadEventListeners(){
+  document.addEventListener('DOMContentLoaded', getTasks);
+  taskInput.addEventListener('keydown', function(e){if (e.keyCode===13) addTask(e)});
+  createBtn.addEventListener('click', addTask);
+  taskList.addEventListener('click', delTask);
+  taskList.addEventListener('click', changeTaskStar);
+  clearBtn.addEventListener('click', clearAllTask);
+  filter.addEventListener('keyup', filterTask);
+}
+
+function getTasks(){
+  if(localStorage.getItem('tasks') !== null){
+    const tasks = JSON.parse(localStorage.getItem('tasks'));
+    tasks.forEach(function(task){
+      //Create li element
+      const li = document.createElement('li');
+      li.className = 'list-group-item list-group-item-action';
+      const liSpan = document.createElement('span');
+      liSpan.className = 'd-flex justify-content-between align-items-center';
+      liSpan.appendChild(document.createTextNode(task.value));
+      const icons = document.createElement('span');
+      icons.id = 'clickableAwesomeFont';
+      if (task.favorite){
+        icons.innerHTML = `
+          <i class='fas fa-star yellowStar favorite-item' aria-hidden='true'></i> 
+          <i class='fa fa-times-circle delete-item' aria-hidden='true'></i>
+        `;
+      }else{
+         icons.innerHTML = `
+          <i class='far fa-star favorite-item' aria-hidden='true'></i> 
+          <i class='fa fa-times-circle delete-item' aria-hidden='true'></i>
+        `;       
+      }
+
+      liSpan.appendChild(icons);
+      li.appendChild(liSpan);
+      taskList.appendChild(li);
+    });
+  }
+}
+
+function filterTask(e){
+  const text = e.target.value.toLowerCase();
+  document.querySelectorAll('.list-group-item').forEach
+  (
+    function(task){
+      const item = task.firstElementChild.firstChild.textContent.toLowerCase();
+      if(item.indexOf(text) != -1){
+        task.style.display = 'block';
+      }else{
+        task.style.display = 'none';
+      }
+    }
+    )
+}
+
+function clearAllTask(e){
+  if(confirm('Are you sure to clear all tasks?')){
+    while (taskList.firstChild){
+      taskList.removeChild(taskList.firstChild);
+    }
+    clearTaskFormLocalStorage();
+  }
+}
+
+function clearTaskFormLocalStorage(){
+  localStorage.clear();
+}
+
+function addTask(e){
+  if(taskInput.value === ''){
+    alert('Add a task');
+  }else{
+    //Create li element
+    const li = document.createElement('li');
+    li.className = 'list-group-item list-group-item-action';
+    const liSpan = document.createElement('span');
+    liSpan.className = 'd-flex justify-content-between align-items-center';
+    liSpan.appendChild(document.createTextNode(taskInput.value));
+    const icons = document.createElement('span');
+    icons.id = 'clickableAwesomeFont';
+    icons.innerHTML = `
+      <i class='far fa-star favorite-item' aria-hidden='true'></i> 
+      <i class='fa fa-times-circle delete-item' aria-hidden='true'></i>
+      `;
+    liSpan.appendChild(icons);
+    li.appendChild(liSpan);
+    taskList.appendChild(li);
+    storeTaskInLocalStorage({value:taskInput.value,favorite:false});
+    taskInput.value = '';
+  }
+}
+
+function storeTaskInLocalStorage(task){
+  let tasks;
+  if (localStorage.getItem('tasks') != null){
+    tasks = JSON.parse(localStorage.getItem('tasks'));
+  }else{
+    tasks = [];
+  }
+  tasks.push(task);
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+
+function delTask(e){
+  if(e.target.classList.contains('delete-item')){
+    e.target.parentElement.parentElement.parentElement.remove();
+    removeTaskFromLocalStorage(e.target.parentElement.parentElement.parentElement);
+  }
+}
+
+function changeTaskStar(e){
+  if(!e.target.classList.contains('favorite-item')) return;
+  if(e.target.classList.contains('yellowStar')){
+    e.target.className = "far fa-star favorite-item";
+  }else{
+    e.target.className = "fas fa-star yellowStar favorite-item";
+  }
+  changeTaskStarInLocalStorage(e.target.parentElement.parentElement.parentElement);
+}
+
+function changeTaskStarInLocalStorage(taskItem){
+  let tasks;
+  if (localStorage.getItem('tasks') != null){
+    tasks = JSON.parse(localStorage.getItem('tasks'));
+  }else{
+    tasks = [];
+  }
+  tasks.forEach(function(task){
+    if(taskItem.firstChild.firstChild.textContent === task.value){
+      task.favorite = !task.favorite;
+    }
+  });
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+
+
+function removeTaskFromLocalStorage(taskItem){
+  let tasks;
+  if (localStorage.getItem('tasks') != null){
+    tasks = JSON.parse(localStorage.getItem('tasks'));
+  }else{
+    tasks = [];
+  }
+  tasks.forEach(function(task, index){
+    if(taskItem.firstChild.firstChild.textContent === task.value){
+      tasks.splice(index, 1);
+    }
+  });
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+</script>
+</body>
